@@ -4,6 +4,7 @@ import { TaskStatus } from './tasks.status.enum';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { TaskRepository } from '../shared/repositories/task.repository';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
+import { User } from 'src/auth/user.entity';
 export interface DeleteReponse {
   id: string;
   message: string;
@@ -14,14 +15,14 @@ export class TasksService {
     private taskRepo: TaskRepository,
   ) {}
 
-  async getTasks(filterDto: GetTasksFilterDto): Promise<Task[]> {
-    return await this.taskRepo.getTasks(filterDto );
+  async getTasks(filterDto: GetTasksFilterDto, user: User): Promise<Task[]> {
+    return await this.taskRepo.getTasks(filterDto, user);
   }
 
 
-  async getTaskById(id: string): Promise<Task> {
+  async getTaskById(id: string, user: User): Promise<Task> {
     const found = await this.taskRepo.findOne({
-      where: {id: id},
+      where: {id, user},
     });
     if (!found) {
       throw new Error('Task not found');
@@ -29,7 +30,7 @@ export class TasksService {
     return found;
   }
 
-  async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
+  async createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
     const { title, description } = createTaskDto;
     const task = this.taskRepo.create({
       title,
@@ -50,8 +51,8 @@ export class TasksService {
     return { id, message: 'Task Successfully Removed' };
   }
 
-  async updateTaskStatus(id: string, status: TaskStatus): Promise<Task> {
-    const task = await this.getTaskById(id);
+  async updateTaskStatus(id: string, status: TaskStatus, user: User): Promise<Task> {
+    const task = await this.getTaskById(id, user);
     task.status = status;
     await this.taskRepo.save(task);
 
